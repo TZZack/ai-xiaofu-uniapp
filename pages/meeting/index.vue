@@ -13,12 +13,13 @@
 				:border="false"
 				is-shadow>
 				<template #title>
-					<view
+					<text
+						selectable
 						class="meeting-title"
-						@click="jumpPage(meeting.link)">{{meeting.title}}</view>
+						@click="jumpPage(meeting.link)">{{meeting.title}}</text>
 				</template>
 				<view class="meeting-create-date"><b>开始时间：</b>{{meeting.start_time}}</view>
-				<view class="meeting-summary"><b>会议简介：</b>{{meeting.summary}}</view>
+				<text selectable class="meeting-summary"><text selectable class="meeting-summary--label">会议简介：</text>{{meeting.summary}}</text>
 			</uni-card>
 			
 			<uni-load-more
@@ -156,7 +157,7 @@ const jumpPage = (link) => {
 	color: #a6a6a6;
 }
 
-.meeting-summary {
-	/* text-indent: 28px; */
+.meeting-summary--label {
+	font-weight: bold;
 }
 </style>

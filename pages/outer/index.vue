@@ -16,8 +16,7 @@ const getArticle = async (link) => {
 		}
 	})
 	let htmlStr = ret.result
-	
-	//根据微信传回的html中的特殊路径data-src转为src等
+
 	/**
 	 * 这里的处理是
 	 * 1、data-src转为src
@@ -39,11 +38,16 @@ const getArticle = async (link) => {
 	// 	that.height = doc.documentElement.scrollHeight;
 	// }, 500);
 	doc.getElementById("js_content").style.visibility = "visible";
+	// TODO：想要监听iframe的load事件再去hideLoading，但是没触发，暂时没搞明白，直接放这里效果也还可以
+	uni.hideLoading()
 }
 onLoad((option) => {
 	if (!option.link) {
 		return
 	}
+	uni.showLoading({
+		mask: true
+	})
 	getArticle(option.link)
 })
 </script>

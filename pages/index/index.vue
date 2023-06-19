@@ -20,7 +20,10 @@
 				class="article-card"
 				:border="false">
 				<template #title>
-					<view class="article-title" @click="jumpPage(article.link)">{{article.title}}</view>
+					<text
+						selectable
+						class="article-title"
+						@click="jumpPage(article.link)">{{article.title}}</text>
 				</template>
 				<view class="article-date">{{article.create_time}}</view>
 				<!-- <view class="article-tags" v-if="article.labels.length">
@@ -29,7 +32,7 @@
 						<text style="margin-left:4px;">{{label}}</text>
 					</view>
 				</view> -->
-				<view class="article-summary">{{article.summary}}</view>
+				<view class="article-summary"><text selectable>{{article.summary}}</text></view>
 			</uni-card>
 			<uni-load-more
 				v-if="isLoading || loadMoreStatus === LOAD_MORE_STATUS.noMore"
