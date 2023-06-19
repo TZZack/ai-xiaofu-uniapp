@@ -1,0 +1,7 @@
+{
+  "name": "http-meeting",
+  "dependencies": {},
+  "extensions": {
+    "uni-cloud-jql": {}
+  }
+}

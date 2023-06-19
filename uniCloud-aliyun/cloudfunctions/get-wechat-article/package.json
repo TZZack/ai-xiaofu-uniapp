@@ -1,0 +1,9 @@
+{
+  "name": "get-wechat-article",
+  "dependencies": {
+    "request": "^2.88.2"
+  },
+  "extensions": {
+    "uni-cloud-jql": {}
+  }
+}

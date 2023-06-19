@@ -1,0 +1,67 @@
+{
+	"pages": [
+		{
+			"path": "pages/index/index",
+			"style": {
+				"disableScroll": true
+			}
+		},
+		{
+            "path": "pages/outer/index",
+            "style": {
+                "enablePullDownRefresh": false
+            }
+        },
+		{
+            "path" : "pages/meeting/index",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "",
+                "enablePullDownRefresh": false,
+				"disableScroll": true
+            }
+            
+        }
+    ],
+	"globalStyle": {
+		"app-plus": { // 去掉所有页面的顶部导航栏
+			"background": "#efeff4",
+			"titleNView": false
+		},
+		"navigationBarTextStyle": "black",
+		"navigationBarTitleText": "AI小服",
+		"navigationBarBackgroundColor": "#F8F8F8",
+		"backgroundColor": "#F8F8F8"
+	},
+	"tabBar": {
+		"selectedColor": "#2979ff",
+		"color": "#8f939c",
+		"spacing": "1px",
+		"iconWidth": "20px",
+		"borderStyle": "none",
+		"backgroundColor": "#fff",
+		"iconfontSrc": "static/iconfont.ttf",
+		"list": [
+			{
+				"pagePath": "pages/index/index",
+				"text": "文章",
+				"iconfont": {
+					"text": "\ue60c",
+					"color": "#c5c7cc",
+					"selectedText": "\ue608",
+					"selectedColor": "#2979ff"
+				}
+			},
+			{
+				"pagePath": "pages/meeting/index",
+				"text": "会议",
+				"iconfont": {
+					"text": "\ue6bb",
+					"color": "#c5c7cc",
+					"selectedText": "\ue62d",
+					"selectedColor": "#2979ff"
+				}
+			}
+		]
+	}
+}

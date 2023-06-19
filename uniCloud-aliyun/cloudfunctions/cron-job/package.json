@@ -1,0 +1,7 @@
+{
+  "name": "cron-job",
+  "dependencies": {},
+  "extensions": {
+    "uni-cloud-jql": {}
+  }
+}
