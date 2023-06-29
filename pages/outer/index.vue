@@ -17,27 +17,25 @@ const getArticle = async (link) => {
 	})
 	let htmlStr = ret.result
 
-	/**
-	 * 这里的处理是
-	 * 1、data-src转为src
-	 * 2、去掉所有script标签
-	 * 3、加个<meta name="referer" content="never">这里直接把之前的改掉即可
-	 */
-	htmlStr = htmlStr.replace(/data-src/g, "src")
-		.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/g, '')
+	// html处理
+	htmlStr = htmlStr
+		// 把image标签的data-src都改成src，微信公众号文章使用了data-src做图片懒加载，这里直接改回src让浏览器直接发送请求即可
+		.replace(/data-src/g, "src")
+		// .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/g, '')
 		.replace(/https/g, 'http')
-		.replace(/content="strict-origin-when-cross-origin"/, 'content="never"');
-	// 设置src
+		// 把所有的image请求的referer都删掉，这样图片就能正常请求了
+		// TODO:但如果是通过brackground-image设置的图片，加载时并不能通过这种方式去掉referer，需要再想办法
+		.replace(/content="strict-origin-when-cross-origin"/, 'content="never"')
+
+	// 设置srcdoc：使用srcdoc而不是write，因为write会导致ifram里面的<script type="module">js文件只加载不执行
 	let iframe = document.getElementById('iframeEl');
-	iframe.src = htmlStr;
+	iframe.srcdoc = htmlStr;
 	// 将静态页面写入iframe中
 	let doc = iframe.contentDocument || iframe.document;
-	doc.write(htmlStr);
-	// //通过延时获取文档高度赋值Iframe去除滚动条，根据实际情况增加延时时间
-	// setTimeout(() => {
-	// 	that.height = doc.documentElement.scrollHeight;
-	// }, 500);
-	doc.getElementById("js_content").style.visibility = "visible";
+	// doc.write(htmlStr);
+	if (doc.getElementById('js_content')) {
+		doc.getElementById('js_content').style.visibility = 'visible';
+	}
 	// TODO：想要监听iframe的load事件再去hideLoading，但是没触发，暂时没搞明白，直接放这里效果也还可以
 	uni.hideLoading()
 }
