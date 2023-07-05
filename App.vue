@@ -21,6 +21,7 @@
 	// 设置整个项目的背景色
 	page {
 		background-color: #f3f3f3;
+		overflow: hidden;
 		font-family: 'PingFang SC Regular', Helvetica Neue, Helvetica, PingFang SC, Hiragino Sans GB, Microsoft YaHei, SimSun, sans-serif;
 	}
 
@@ -62,6 +63,9 @@
 	}
 	.uni-app--showtabbar uni-page-wrapper::after {
 		display: none;
+	}
+	.uni-app--showtabbar uni-page-wrapper {
+		height: 100%;
 	}
 	
 	/* 公共样式 */

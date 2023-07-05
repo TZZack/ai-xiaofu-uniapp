@@ -3,7 +3,7 @@
 	<cell :keep-scroll-position="keepScrollPosition">
 		<!-- #endif -->
 		<view :class="{ 'uni-list-item--disabled': disabled }" :style="{'background-color':customStyle.backgroundColor}"
-			:hover-class="(!clickable && !link) || disabled || showSwitch ? '' : 'uni-list-item--hover'"
+			:hover-class="!clickable || disabled || showSwitch ? '' : 'uni-list-item--hover'"
 			class="uni-list-item" @click="onClick">
 			<view v-if="!isFirstChild" class="border--left" :class="{ 'uni-list--border': border }"></view>
 			<view class="uni-list-item__container"

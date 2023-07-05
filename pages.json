@@ -8,20 +8,19 @@
 			}
 		},
 		{
+		    "path" : "pages/meeting/index",
+		    "style": {
+		        "navigationBarTitleText": "",
+		        "enablePullDownRefresh": false,
+				"disableScroll": true
+		    }
+		},
+		{
             "path": "pages/outer/index",
             "style": {
-                "enablePullDownRefresh": false
-            }
-        },
-		{
-            "path" : "pages/meeting/index",
-            "style":
-            {
-                "navigationBarTitleText": "",
                 "enablePullDownRefresh": false,
 				"disableScroll": true
             }
-            
         }
     ],
 	"globalStyle": {

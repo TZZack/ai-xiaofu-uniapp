@@ -1,6 +1,10 @@
 <template>
 	<!-- <web-view :src="link"></web-view> -->
-	<iframe id="iframeEl" src="" style="width: 100vw;height:100vh;border:none;"></iframe>
+	<movable-area class="outer-movable-area">
+		<movable-view class="outer-movable-view" :scale="true" direction="none">
+			<iframe id="iframeEl" src="" style="width: 100vw;height:100vh;border:none;"></iframe>
+		</movable-view>
+	</movable-area>
 </template>
 
 <script setup>
@@ -59,6 +63,13 @@ onUnmounted(() => {
 })
 </script>
 
-<style>
-
+<style lang="less">
+.outer-movable-area {
+	height: 100vh;
+	width: 100vw;
+	.outer-movable-view {
+		height: 100%;
+		width: 100%;
+	}
+}
 </style>

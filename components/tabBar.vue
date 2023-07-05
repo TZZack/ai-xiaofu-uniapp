@@ -15,14 +15,19 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, watch } from "vue";
 const props = defineProps({
 	dataSource: Array,
 	modelValue: Number
 })
 const emits = defineEmits(['update:modelValue', 'change'])
 
-const activeTab = ref(props.modelValue)
+const activeTab = ref('')
+watch(() => props.modelValue, newValue => {
+	activeTab.value = newValue
+}, {
+	immediate: true
+})
 const onClickTab = (tabVal) => {
 	if (tabVal === activeTab.value) {
 		return
