@@ -9,20 +9,20 @@
 const db = uniCloud.database()
 exports.main = async (event, context) => {
 	// 查询1个月以前的文章数据并删除
-	const ret = await db.collection('articles').where({
+	const ret1 = await db.collection('articles').where({
 		create_time: db.command.lte(new Date(new Date().getTime() - 30 * 24 * 60 * 60 * 1000))
 	}).get()
-	ret.data.forEach(item => {
+	ret1.data.forEach(item => {
 		if (item._id) {
 			db.collection('articles').doc(item._id).remove()
 		}
 	})
 
 	// 查询1周前的会议数据并删除
-	const ret = await db.collection('meetings').where({
+	const ret2 = await db.collection('meetings').where({
 		start_time: db.command.lte(new Date(new Date().getTime() - 7 * 24 * 60 * 60 * 1000))
 	}).get()
-	ret.data.forEach(item => {
+	ret2.data.forEach(item => {
 		if (item._id) {
 			db.collection('meetings').doc(item._id).remove()
 		}

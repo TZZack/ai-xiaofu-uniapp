@@ -48,3 +48,33 @@ export const encodeDate = (date, format = 'Y-m-d H:i:s') => {
     });
 }
 
+/**
+ * 按交互需求格式化时间为
+ * 不足1小时：1小时内
+ * 1-2小时：1小时前
+ * ...
+ * 1-2天：1天前
+ * ...
+ * 1-2周：1周前
+ * ...
+ * 4-5周：4周前
+ * 
+ * 每天会定时清掉1个月前的数据，所以最多到4周前
+ */
+const oneHour = 60 * 60 * 1000
+const oneDay = 24 * oneHour
+const oneWeek = 7 * oneDay
+export const timeTransform = (timeStr) => {
+	const timestamp = new Date(timeStr).getTime()
+	const curTimestamp = new Date().getTime()
+	const dValue = curTimestamp - timestamp
+	if (dValue < oneHour) {
+		return '1小时内'
+	} else if (dValue < oneDay) {
+		return Math.floor(dValue / oneHour) + '小时前'
+	} else if (dValue < oneWeek) {
+		return Math.floor(dValue / oneDay) + '天前'
+	} else {
+		return Math.floor(dValue / oneWeek) + '周前'
+	}
+}
