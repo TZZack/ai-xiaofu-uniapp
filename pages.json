@@ -3,7 +3,8 @@
 		{
 			"path": "pages/index/index",
 			"style": {
-				"disableScroll": true
+				"disableScroll": true,
+				"enablePullDownRefresh": false
 			}
 		},
 		{
@@ -14,7 +15,7 @@
         },
 		{
             "path" : "pages/meeting/index",
-            "style" :                                                                                    
+            "style":
             {
                 "navigationBarTitleText": "",
                 "enablePullDownRefresh": false,
@@ -26,7 +27,8 @@
 	"globalStyle": {
 		"app-plus": { // 去掉所有页面的顶部导航栏
 			"background": "#efeff4",
-			"titleNView": false
+			"titleNView": false,
+			"bounce": "none"
 		},
 		"navigationBarTextStyle": "black",
 		"navigationBarTitleText": "AI小服",
@@ -34,33 +36,26 @@
 		"backgroundColor": "#F8F8F8"
 	},
 	"tabBar": {
-		"selectedColor": "#2979ff",
-		"color": "#8f939c",
-		"spacing": "1px",
-		"iconWidth": "20px",
+		"color": "#ccc",
+		"selectedColor": "#69B8FD",
+		"height": "60px",
+		"spacing": "2px",
+		"iconWidth": "24px",
 		"borderStyle": "none",
 		"backgroundColor": "#fff",
-		"iconfontSrc": "static/iconfont.ttf",
+		"fontSize": "12px",
 		"list": [
 			{
 				"pagePath": "pages/index/index",
 				"text": "文章",
-				"iconfont": {
-					"text": "\ue60c",
-					"color": "#c5c7cc",
-					"selectedText": "\ue608",
-					"selectedColor": "#2979ff"
-				}
+				"iconPath": "static/img/article.svg",
+				"selectedIconPath": "static/img/article-active.svg"
 			},
 			{
 				"pagePath": "pages/meeting/index",
 				"text": "会议",
-				"iconfont": {
-					"text": "\ue6bb",
-					"color": "#c5c7cc",
-					"selectedText": "\ue62d",
-					"selectedColor": "#2979ff"
-				}
+				"iconPath": "static/img/meeting.svg",
+				"selectedIconPath": "static/img/meeting-avtive.svg"
 			}
 		]
 	}

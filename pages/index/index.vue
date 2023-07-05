@@ -1,39 +1,57 @@
 <template>
-	<view class="container">
-		<view class="category-tabs">
-			<uni-tag
-				v-for="item in categoryList"
-				:key="item.value"
-				:text="item.alias"
-				type="primary"
-				:inverted="item.value !== activeCategory"
-				@click="changeCategory(item.value)" />
-		</view>
+	<view class="container"
+		  :class="{
+			  'pc-container': isPc
+		  }">
+		<TabBar v-model="activeCategory"
+				:dataSource="categoryList"
+				style="flex: 0 0 44px;"
+				@change="onCategoryChange"></TabBar>
 		<scroll-view
 			class="article-scroll-view"
 			scroll-y
 			@scrolltolower="onScrollToLower"
 		>
-			<uni-card
-				v-for="article in articleList"
-				:key="article._id"
-				class="article-card"
-				:border="false">
-				<template #title>
-					<text
-						selectable
-						class="article-title"
-						@click="jumpPage(article.link)">{{article.title}}</text>
-				</template>
-				<view class="article-date">{{article.create_time}}</view>
-				<!-- <view class="article-tags" v-if="article.labels.length">
-					<view v-for="label in article.labels" :key="label" class="tag-item">
-						<uni-icons custom-prefix="iconfont" type="icon-tag" size="13"></uni-icons>
-						<text style="margin-left:4px;">{{label}}</text>
+			<template v-for="article in articleList">
+				<uni-card
+					v-if="article.type !== 'date'"
+					:key="article._id"
+					class="article-card"
+					:border="false"
+					:is-shadow="false"
+					@click="jumpPage(article.link)">
+					<template #title>
+						<!-- 规避：这里给title再加一个click是因为uni-card的title使用插槽时click事件没有冒泡上来 -->
+						<view @click.stop="jumpPage(article.link)">
+							<image
+								v-if="!article.isSquare && article.imgSrc"
+								:src="article.imgSrc"
+								mode="aspectFill"
+								class="article-header__img"></image>
+							<view class="article-header__title-wrap"
+								  :class="{
+									  'article-header__title-wrap--small': article.isSquare
+								  }">
+								<text
+									selectable
+									class="article-header__title"
+									:class="!article.isSquare && article.imgSrc ? '' : 'article-header__title-small'">{{article.title}}</text>
+								<image
+									v-if="article.isSquare && article.imgSrc"
+									:src="article.imgSrc"
+									mode="aspectFit"
+									class="article-header__img-small"></image>
+							</view>
+						</view>
+					</template>
+					<view class="article-summary"><text selectable>{{article.summary}}</text></view>
+					<view class="article-footer">
+						<view class="article-footer__time">{{article.timeFlag}}</view>
+						<view class="article-footer__icon"></view>
 					</view>
-				</view> -->
-				<view class="article-summary"><text selectable>{{article.summary}}</text></view>
-			</uni-card>
+				</uni-card>
+				<view v-else :key="article.value" class="article-date">{{ article.value }}</view>
+			</template>
 			<uni-load-more
 				v-if="isLoading || loadMoreStatus === LOAD_MORE_STATUS.noMore"
 				:status="loadMoreStatus"
@@ -43,8 +61,10 @@
 </template>
 
 <script setup>
-import {ref, onMounted} from 'vue'
-import { encodeDate } from '../../utils'
+import {ref, onMounted, computed} from 'vue'
+import { encodeDate, timeTransform } from '../../utils'
+import TabBar from '../../components/tabBar.vue'
+import { useTabbarControl } from '../../hooks/tabbarControl.js'
 
 const ALL_TYPE = {
 	alias: '全部',
@@ -59,6 +79,12 @@ const articleList = ref([])
 const categoryList = ref([])
 const activeCategory = ref(ALL_TYPE.value)
 
+// 是否pc端
+const isPc = computed(() => {
+	const deviceInfo = uni.getDeviceInfo()
+	return deviceInfo.deviceType === 'pc'
+})
+
 const isLoading = ref(false)
 const loadMoreStatus = ref(LOAD_MORE_STATUS.loading) // loading和noMore，more这个加载前状态就不用了，只用前面两个状态就够了
 let pageNo = 1
@@ -71,6 +97,7 @@ const loadMoreTextObj = {
 }
 
 onMounted(() => {
+	useTabbarControl('article-scroll-view')
 	getCategoryList()
 	getArticles()
 })
@@ -111,11 +138,7 @@ const getArticles = async (isLoadMore = false) => {
 		}
 	})
 	const data = ret.result.data || []
-	data.forEach(article => {
-		article.labels = article.labels ? article.labels.split(',') : []
-		article.create_time = encodeDate(new Date(article.create_time), 'Y-m-d H:i')
-	})
-	articleList.value.push(...data)
+	articleList.value.push(...dataHandler(data))
 
 	// load-more组件状态更新
 	if (data.length < pageSize || !data.length) {
@@ -129,9 +152,31 @@ const getArticles = async (isLoadMore = false) => {
 	}
 }
 
-const changeCategory = (value) => {
+const dataHandler = (data) => {
+	let ret = []
+	data.forEach(article => {
+		article.labels = article.labels ? article.labels.split(',') : []
+		article.create_time = encodeDate(new Date(article.create_time), 'Y-m-d H:i')
+		const articleDate = article.create_time.split(' ')[0] // 获取年月日
+		// 判断并插入新的日期节点
+		if (![...articleList.value, ...ret].some(item => item.type === 'date' && item.value === articleDate)) {
+			ret.push({
+				type: 'date',
+				value: articleDate
+			})
+		}
+		
+		// 不在template里面调用函数，先js处理在回填（防止出现nan）
+		article.timeFlag = timeTransform(article.create_time)
+
+		ret.push(article)
+	})
+	return ret
+}
+
+// 切换类型的操作
+const onCategoryChange = (value) => {
 	// 切换类型后重置参数
-	activeCategory.value = value
 	articleList.value = []
 	pageNo = 1
 	loadMoreStatus.value = LOAD_MORE_STATUS.loading
@@ -158,69 +203,127 @@ const jumpPage = (link) => {
 }
 </script>
 
-<style>
+<style lang="less">
 .container {
 	font-size: 14px;
 	line-height: 24px;
-	height: calc(100vh - 50px);
+	height: 100vh;
 	width: 100%;
 	display: flex;
 	flex-direction: column;
 	box-sizing: border-box;
 }
 
-.category-tabs {
-	display: flex;
-	padding: 12px 16px 12px 16px;
-	justify-content: space-between;
-	border-bottom: 1px solid #e7e7e7;
-	height: 24px;
-}
-
 .article-scroll-view {
-	height: calc(100% - 50px);
+	height: calc(100% - 44px);
 	width: 100%;
-	padding: 0 16px 8px;
+	padding: 0 16px;
 	box-sizing: border-box;
 }
 
 .article-card {
-	padding: 16rpx !important;
-	margin: 16rpx 0 0 0 !important;
-}
-
-.article-title {
-	font-size: 14px;
-	color: #007BFF;
-	text-decoration: underline;
+	padding: 0 !important;
+	margin: 12px 0 0 0 !important;
 	cursor: pointer;
-	white-space: pre-line;
+	border-radius: 8px;
+	// 覆盖
+	font-family: 'PingFang SC Regular', Helvetica Neue, Helvetica, PingFang SC, Hiragino Sans GB, Microsoft YaHei, SimSun, sans-serif !important;
 }
 
-.article-tags {
-	display: flex;
-	margin-bottom: 4px;
+.article-header__img {
+	display: block;
+	width: 100%;
+	height: 144px;
 }
-.tag-item {
-	display: inline-block;
-	border: 1px solid #e7e7e7;
-	border-radius: 8rpx;
-	height: 22px;
+.article-header__title-wrap {
+	padding: 0 16px;
+	margin-top: 20px;
+	display: flex;
+	justify-content: space-between;
+	margin-bottom: 26px;
+}
+.article-header__title-wrap--small {
+	margin-top: 12px;
+	margin-bottom: 10px;
+}
+.article-header__title {
+	font-size: 16px;
+	font-weight: 600;
 	line-height: 24px;
-	font-size: 12px;
-	padding: 0 15rpx;
-	margin-right: 8rpx;
-	margin-top: 8rpx;
+	color: #000;
+	white-space: pre-line;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	display: -webkit-box;
+	-webkit-line-clamp: 3;
+	-webkit-box-orient: vertical;
+}
+/* 展示小图片的情况 */
+.article-header__title-small {
+	
+}
+.article-header__img-small {
+	height: 60px;
+	flex: 0 0 60px;
+	border-radius: 6px;
 }
 
 .article-date {
+	position: relative;
 	font-size: 14px;
-	line-height: 16px;
-	color: #a6a6a6;
-	margin-bottom: 4px;
+	line-height: 44px;
+	color: #666666;
+	/* 抵消article-card的margin */
+	margin-bottom: -12px;
+	padding-left: 30px;
+}
+.article-date:before {
+	content: '';
+	width: 14px;
+	height: 30px;
+	background: url(/static/img/time-middle.svg) no-repeat center;
+	position: absolute;
+	left: 0;
+	top: 6px;
+}
+.article-date:first-child:before {
+	background: url(/static/img/time-top.svg) no-repeat center;
+	top: 14px;
 }
 
 .article-summary {
-	text-indent: 28px;
+	padding: 0 6px;
+	font-size: 14px;
+	line-height: 22px;
+	color: #000;
+	position: relative;
+}
+.article-summary::before {
+	content: '';
+	width: 20px;
+	height: 30px;
+	background: url(/static/img/left-quote.svg) no-repeat center;
+	position: absolute;
+	left: 2px;
+	top: -32px;
+}
+
+.article-footer {
+	position: relative;
+	padding: 0 6px;
+	margin-top: 20px;
+	&__time {
+		font-size: 10px;
+		color: #666;
+		display: inline-block;
+	}
+	&__icon {
+		width: 20px;
+		height: 30px;
+		background: url(/static/img/right-quote.svg) no-repeat center;
+		position: absolute;
+		right: 8px;
+		top: -8px;
+	}
 }
 </style>
