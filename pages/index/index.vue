@@ -11,6 +11,8 @@
 			class="article-scroll-view"
 			scroll-y
 			@scrolltolower="onScrollToLower"
+			@touchstart="onTouchStart"
+			@touchend="onTouchEnd"
 		>
 			<template v-for="article in articleList">
 				<uni-card
@@ -175,12 +177,15 @@ const dataHandler = (data) => {
 }
 
 // 切换类型的操作
-const onCategoryChange = (value) => {
-	// 切换类型后重置参数
+const onCategoryChange = () => {
+	reloadList()
+}
+const reloadList = () => {
+	// 重置参数
 	articleList.value = []
 	pageNo = 1
 	loadMoreStatus.value = LOAD_MORE_STATUS.loading
-
+	
 	getArticles()
 }
 
@@ -200,6 +205,31 @@ const jumpPage = (link) => {
 	uni.navigateTo({
 		url: '/pages/outer/index?link=' + encodeURIComponent(link)
 	})
+}
+
+// 左右滑动切换类别
+let touchStartX = 0;
+let touchStartY = 0;
+const onTouchStart = (e) => {
+	touchStartX = e.touches[0].clientX;
+	touchStartY = e.touches[0].clientY;
+}
+const onTouchEnd = (e) => {
+	const deltaX = e.changedTouches[0].clientX - touchStartX
+	const deltaY = e.changedTouches[0].clientY - touchStartY
+	if (Math.abs(deltaX) > 50 && Math.abs(deltaX) > Math.abs(deltaY)) {
+		const curCategoryIndex = categoryList.value.findIndex(item => item.value === activeCategory.value)
+		if (curCategoryIndex < 0) {
+			return
+		}
+		if (deltaX > 0 && curCategoryIndex > 0) {
+			activeCategory.value = categoryList.value[curCategoryIndex - 1].value
+			reloadList()
+		} else if (deltaX < 0 && curCategoryIndex < categoryList.value.length - 1) {
+			activeCategory.value = categoryList.value[curCategoryIndex + 1].value
+			reloadList()
+		}
+	}
 }
 </script>
 
