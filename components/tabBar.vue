@@ -1,9 +1,12 @@
 <template>
-	<scroll-view 
+	
+	<scroll-view
 		class="xf-tab-bar"
 		scroll-x
 		@touchmove.stop>
+		<uni-skeleton v-if="!dataSource.length" animated :loading="!dataSource.length" :rows="0" style="padding-left: 16px;"></uni-skeleton>
 		<view
+			v-else
 			v-for="item in dataSource"
 			:key="item.value"
 			class="xf-tab-bar__item"
@@ -15,7 +18,9 @@
 </template>
 
 <script setup>
-import { ref, watch } from "vue";
+import { ref, watch } from "vue"
+import UniSkeleton from './skeleton/index.vue'
+
 const props = defineProps({
 	dataSource: Array,
 	modelValue: Number

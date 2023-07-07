@@ -13,8 +13,10 @@
 			@scrolltolower="onScrollToLower"
 			@touchstart="onTouchStart"
 			@touchend="onTouchEnd"
+			@touchmove.stop
 		>
-			<template v-for="article in articleList">
+			<uni-skeleton v-show="!hasLoaded" :rows="6" animated :loading="!hasLoaded" />
+			<template v-show="hasLoaded" v-for="article in articleList">
 				<uni-card
 					v-if="article.type !== 'date'"
 					:key="article._id"
@@ -55,7 +57,7 @@
 				<view v-else :key="article.value" class="article-date">{{ article.value }}</view>
 			</template>
 			<uni-load-more
-				v-if="isLoading || loadMoreStatus === LOAD_MORE_STATUS.noMore"
+				v-if="isLoadingMore || loadMoreStatus === LOAD_MORE_STATUS.noMore"
 				:status="loadMoreStatus"
 				:content-text="loadMoreTextObj" />
 		</scroll-view>
@@ -65,6 +67,7 @@
 <script setup>
 import {ref, onMounted, computed} from 'vue'
 import { encodeDate, timeTransform } from '../../utils'
+import UniSkeleton from '../../components/skeleton/index.vue'
 import TabBar from '../../components/tabBar.vue'
 import { useTabbarControl } from '../../hooks/tabbarControl.js'
 
@@ -87,7 +90,8 @@ const isPc = computed(() => {
 	return deviceInfo.deviceType === 'pc'
 })
 
-const isLoading = ref(false)
+const hasLoaded = ref(false) // 是否已经加载了数据
+const isLoadingMore = ref(false) // 是否正在加载更多
 const loadMoreStatus = ref(LOAD_MORE_STATUS.loading) // loading和noMore，more这个加载前状态就不用了，只用前面两个状态就够了
 let pageNo = 1
 const pageSize = 20
@@ -120,14 +124,10 @@ const getArticles = async (isLoadMore = false) => {
 		return
 	}
 
-	// 不是加载更多时，则展示全局isLoading
-	// 加载更多时，通过isLoading控制加载更多图标的展示
-	if (!isLoadMore) {
-		uni.showLoading({
-			mask: true
-		})
-	} else {
-		isLoading.value = true
+	// 不是加载更多时，则展示全局isLoadingMore
+	// 加载更多时，通过isLoadingMore控制加载更多图标的展示
+	if (isLoadMore) {
+		isLoadingMore.value = true
 	}
 
 	const ret = await uniCloud.callFunction({
@@ -141,16 +141,16 @@ const getArticles = async (isLoadMore = false) => {
 	})
 	const data = ret.result.data || []
 	articleList.value.push(...dataHandler(data))
+	
+	hasLoaded.value = true
 
-	// load-more组件状态更新
+	// 判断是否没有更多数据了
 	if (data.length < pageSize || !data.length) {
 		loadMoreStatus.value = LOAD_MORE_STATUS.noMore
 	}
 
-	if (!isLoadMore) {
-		uni.hideLoading()
-	} else {
-		isLoading.value = false
+	if (isLoadMore) {
+		isLoadingMore.value = false
 	}
 }
 
@@ -182,6 +182,7 @@ const onCategoryChange = () => {
 }
 const reloadList = () => {
 	// 重置参数
+	hasLoaded.value = false
 	articleList.value = []
 	pageNo = 1
 	loadMoreStatus.value = LOAD_MORE_STATUS.loading

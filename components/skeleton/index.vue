@@ -48,6 +48,7 @@ export default {
   height: 16px;
   margin-top: 16px;
   background: #ececec;
+  border-radius: 4px;
 }
 .uni-skeleton .uni-skeleton-paragraph {
   margin: 0;
@@ -59,6 +60,7 @@ export default {
   height: 16px;
   list-style: none;
   background: #ececec;
+  border-radius: 4px;
 }
 .uni-skeleton-animated .uni-skeleton-title {
   background: linear-gradient(90deg, #ececec 25%, #d3d4d8 37%, #ececec 63%);

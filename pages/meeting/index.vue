@@ -9,7 +9,7 @@
 			@scrolltolower="onScrollToLower"
 		>
 			<view class="meeting-group">近期会议</view>
-			<uni-skeleton animated :loading="!hasLoaded"></uni-skeleton>
+			<uni-skeleton animated :loading="!hasLoaded" :rows="4"></uni-skeleton>
 			<uni-list
 				v-if="curMeetingList.length"
 				class="meeting-list">
@@ -51,7 +51,7 @@
 			
 			<!-- 不把近期会议和历史会议合到一起复用template，方便后续拓展 -->
 			<view class="meeting-group">历史会议</view>
-			<uni-skeleton animated :loading="!hasLoaded"></uni-skeleton>
+			<uni-skeleton animated :loading="!hasLoaded" :rows="4"></uni-skeleton>
 			<uni-list
 				v-if="preMeetingList.length"
 				class="meeting-list">
@@ -174,7 +174,7 @@ const getMeetings = async (isLoadMore = false) => {
 	curList.length && curMeetingList.value.push(...curList)
 	preList.length && preMeetingList.value.push(...preList)
 	
-	// load-more组件状态更新
+	// 判断是否没有更多数据了
 	if (data.length < pageSize || !data.length) {
 		loadMoreStatus.value = LOAD_MORE_STATUS.noMore
 	}
