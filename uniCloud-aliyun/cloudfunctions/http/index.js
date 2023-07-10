@@ -6,6 +6,7 @@ const deleteArticle = require('./deleteArticle/index')
 const updateArticle = require('./updateArticle/index')
 const getArticles = require('./getArticles/index')
 const getArticleTypes = require('./getArticleTypes/index')
+const getArticleById = require('./getArticleById/index')
 const addArticleType = require('./addArticleType/index')
 const deleteArticleType = require('./deleteArticleType/index')
 const deleteAll = require('./deleteAll/index')
@@ -33,6 +34,8 @@ exports.main = async (event, context) => {
 			return await getArticles.main()
 		case 'getArticleTypes':
 			return await getArticleTypes.main()
+		case 'getArticleById':
+			return await getArticleById.main(data, context)
 		case 'addArticleType':
 			return await addArticleType.main(data, context)
 		case 'deleteArticleType':

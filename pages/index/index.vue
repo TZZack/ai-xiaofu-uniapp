@@ -158,8 +158,8 @@ const dataHandler = (data) => {
 	let ret = []
 	data.forEach(article => {
 		article.labels = article.labels ? article.labels.split(',') : []
-		article.create_time = encodeDate(new Date(article.create_time), 'Y-m-d H:i')
-		const articleDate = article.create_time.split(' ')[0] // 获取年月日
+		article.push_time = encodeDate(new Date(article.push_time), 'Y-m-d H:i')
+		const articleDate = article.push_time.split(' ')[0] // 获取年月日
 		// 判断并插入新的日期节点
 		if (![...articleList.value, ...ret].some(item => item.type === 'date' && item.value === articleDate)) {
 			ret.push({
@@ -169,7 +169,7 @@ const dataHandler = (data) => {
 		}
 		
 		// 不在template里面调用函数，先js处理在回填（防止出现nan）
-		article.timeFlag = timeTransform(article.create_time)
+		article.timeFlag = timeTransform(article.push_time)
 
 		ret.push(article)
 	})
@@ -203,9 +203,9 @@ const jumpPage = (link) => {
 	if (!link) {
 		return
 	}
-	uni.navigateTo({
-		url: '/pages/outer/index?link=' + encodeURIComponent(link)
-	})
+
+	window.location.href = link
+	// window.open(link)
 }
 
 // 左右滑动切换类别

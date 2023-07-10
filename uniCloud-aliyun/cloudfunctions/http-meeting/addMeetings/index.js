@@ -13,11 +13,9 @@ exports.main = async (data, context) => {
 		// link处理
 		meeting.link = meeting.article_link
 		delete meeting.article_link
-		// 创建时间处理
-		meeting.create_time = meeting.created_time ? new Date(meeting.created_time) : new Date()
+		// 时间处理（注意：统一使用使用时间戳，因为阿里云和腾讯云都是中时区）
+		meeting.create_time = meeting.created_time ? meeting.created_time : new Date().getTime()
 		delete meeting.created_time
-		// 会议开始时间处理
-		meeting.start_time = meeting.start_time ? new Date(meeting.start_time) : null
 		// 简介处理
 		meeting.summary = meeting.content
 		delete meeting.content

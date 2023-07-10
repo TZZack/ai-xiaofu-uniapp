@@ -11,7 +11,7 @@ exports.main = async (event, context) => {
 
 	if (category === -1) {
 		return await db.collection('articles')
-			.orderBy('create_time', 'desc')
+			.orderBy('push_time', 'desc')
 			.skip((pageNo - 1) * pageSize)
 			.limit(pageSize)
 			.get()
@@ -21,7 +21,7 @@ exports.main = async (event, context) => {
 		.where({
 			type: category
 		})
-		.orderBy('create_time', 'desc')
+		.orderBy('push_time', 'desc')
 		.skip((pageNo - 1) * pageSize)
 		.limit(pageSize)
 		.get()

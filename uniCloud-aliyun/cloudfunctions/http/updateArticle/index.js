@@ -18,9 +18,6 @@ exports.main = async (data, context) => {
 		const targetType = typeList.find(type => type.alias === newValue.type)
 		newValue.type = targetType ? targetType.value : 999 // 999 为其他
 	}
-	if (newValue.create_time) {
-		newValue.create_time = new Date(newValue.create_time)
-	}
 
 	return await db.collection('articles').doc(id).update(newValue)
 };
