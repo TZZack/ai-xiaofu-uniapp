@@ -16,11 +16,8 @@ exports.main = async (data, context) => {
 		delete newValue.article_link
 	}
 	if (newValue.created_time) {
-		newValue.create_time = new Date(newValue.created_time)
+		newValue.create_time = newValue.created_time
 		delete newValue.created_time
-	}
-	if (newValue.start_time) {
-		newValue.start_time = new Date(newValue.start_time)
 	}
 	if (newValue.content) {
 		newValue.summary = newValue.content

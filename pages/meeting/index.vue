@@ -19,8 +19,8 @@
 					:show-arrow="false"
 					direction="column"
 					class="meeting-list-item"
-					link="navigateTo"
-					:to="'/pages/outer/index?link=' + encodeURIComponent(meeting.link)">
+					clickable
+					@click="onMeetingClick(meeting.link)">
 					<template #body>
 						<image
 							v-if="!meeting.isSquare && meeting.imgSrc"
@@ -160,7 +160,7 @@ const getMeetings = async (isLoadMore = false) => {
 	const curList = []
 	data.forEach(meeting => {
 		const meetingDate = new Date(meeting.start_time)
-		meeting.start_time = encodeDate(meetingDate, 'Y-m-d H:i')
+		meeting.start_time = encodeDate(meetingDate, 'Y-m-d')
 
 		if (new Date().getTime() < meetingDate.getTime()) {
 			curList.push(meeting)
@@ -191,6 +191,10 @@ const onScrollToLower = () => {
 	}
 	pageNo++
 	getMeetings(true)
+}
+
+const onMeetingClick = (link) => {
+	window.location.href = link
 }
 </script>
 
@@ -228,6 +232,10 @@ const onScrollToLower = () => {
 
 	:deep(.uni-list-item__container) {
 		padding: 12px 0 16px !important;
+	}
+	/* 取消点击的hover效果 */
+	:deep(.uni-list-item--hover) {
+		background-color: #fff !important;
 	}
 	/* 大图 */
 	.meeting-header__img {

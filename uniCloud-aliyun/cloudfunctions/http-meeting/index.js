@@ -6,6 +6,7 @@ const deleteMeeting = require('./deleteMeeting/index')
 const updateMeeting = require('./updateMeeting/index')
 const getMeetings = require('./getMeetings/index')
 const deleteAll = require('./deleteAll/index')
+const getMeetingById = require('./getMeetingById/index')
 
 const db = uniCloud.database()
 exports.main = async (event, context) => {
@@ -28,6 +29,8 @@ exports.main = async (event, context) => {
 			return await updateMeeting.main(data, context)
 		case 'getMeetings':
 			return await getMeetings.main()
+		case 'getMeetingById':
+			return await getMeetingById.main(data, context)
 		case 'deleteAll':
 			return await deleteAll.main()
 	}
