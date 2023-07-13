@@ -1,0 +1,49 @@
+// 文档教程: https://uniapp.dcloud.net.cn/uniCloud/schema
+{
+	"bsonType": "object",
+	"description": "会议表",
+	"required": ["title", "summary", "link", "start_time"],
+	"permission": {
+		"read": false,
+		"create": false,
+		"update": false,
+		"delete": false
+	},
+	"properties": {
+		"_id": {
+		  "description": "ID，系统自动生成"
+		},
+		"title": {
+		  "description": "会议title",
+		  "bsonType": "string"
+		},
+		"summary": {
+		  "description": "会议简介",
+		  "bsonType": "string"
+		},
+		"link": {
+		  "description": "会议链接",
+		  "bsonType": "string"
+		},
+		"create_time": {
+		  "description": "记录创建时间",
+		  "bsonType": "timestamp"
+		},
+		"start_time": {
+		  "description": "会议开始时间",
+		  "bsonType": "timestamp"
+		},
+		"imgSrc": {
+		  "description": "封面图片链接",
+		  "bsonType": "string"
+		},
+		"isSquare": {
+		  "description": "封面图片是否为正方形：0-正方形，1-长方形",
+		  "enum": [0, 1]
+		},
+		"isDeleted": {
+		  "description": "是否被标记为已删除：0-未标记，1-已标记",
+		  "enum": [0, 1]
+		}
+	}
+}

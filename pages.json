@@ -21,6 +21,13 @@
                 "enablePullDownRefresh": false,
 				"disableScroll": true
             }
+        },
+		{
+            "path" : "pages/login/index",
+            "style" : {
+                "navigationBarTitleText": "",
+                "enablePullDownRefresh": false
+            }
         }
     ],
 	"globalStyle": {
