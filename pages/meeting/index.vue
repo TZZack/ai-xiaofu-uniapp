@@ -44,6 +44,16 @@
 						<view class="meeting-body">
 							{{meeting.summary}}
 						</view>
+						
+						<!-- 超级权限 -->
+						<view v-if="isLogin"
+							class="admin-toolbar"
+							:class="meeting.isDeleted ? 'admin-toolbar--deleted' : ''"
+							@click.stop="onAdminClick(meeting)">
+							<uni-icons :type="meeting.isDeleted ? 'refreshempty' : 'trash'" size="26"></uni-icons>
+							<view v-if="meeting.isDeleted" class="admin-toolbar__deleted-msg">已删除</view>
+						</view>
+	
 					</template>
 				</uni-list-item>
 			</uni-list>
@@ -86,6 +96,15 @@
 						<view class="meeting-body">
 							{{meeting.summary}}
 						</view>
+						
+						<!-- 超级权限 -->
+						<view v-if="isLogin"
+							class="admin-toolbar"
+							:class="meeting.isDeleted ? 'admin-toolbar--deleted' : ''"
+							@click.stop="onAdminClick(meeting)">
+							<uni-icons :type="meeting.isDeleted ? 'refreshempty' : 'trash'" size="26"></uni-icons>
+							<view v-if="meeting.isDeleted" class="admin-toolbar__deleted-msg">已删除</view>
+						</view>
 					</template>
 				</uni-list-item>
 			</uni-list>
@@ -96,6 +115,14 @@
 				:status="loadMoreStatus"
 				:content-text="loadMoreTextObj" />
 		</scroll-view>
+		<uni-popup ref="confirmDialog" type="dialog">
+			<uni-popup-dialog
+				type="warn"
+				:content="confirmContent"
+				calcelText="取消"
+				confirmText="确定"
+				@confirm="deleteConfirm"/>
+		</uni-popup>
 	</view>
 </template>
 
@@ -104,6 +131,7 @@ import {ref, onMounted, computed} from 'vue'
 import { encodeDate } from '../../utils'
 import { useTabbarControl } from '../../hooks/tabbarControl.js'
 import UniSkeleton from '../../components/skeleton/index.vue'
+import { useLogin } from '/hooks/login'
 
 const curMeetingList = ref([])	// 近期会议列表
 const preMeetingList = ref([])	// 历史会议列表
@@ -132,6 +160,8 @@ const loadMoreTextObj = {
 	contentnomore: '没有更多数据了',
 }
 
+const { isLogin } = useLogin()
+
 onMounted(() => {
 	useTabbarControl('meeting-scroll-view')
 	getMeetings()
@@ -150,6 +180,7 @@ const getMeetings = async (isLoadMore = false) => {
 	const ret = await uniCloud.callFunction({
 		name: 'meetings',
 		data: {
+			isAdmin: isLogin.value,
 			type: 'getList',
 			pageNo,
 			pageSize,
@@ -195,6 +226,34 @@ const onScrollToLower = () => {
 
 const onMeetingClick = (link) => {
 	window.location.href = link
+}
+
+const confirmDialog = ref('')
+const confirmContent = ref('')
+let selectedMeeting = ''
+const onAdminClick = async (meetingItem) => {
+	if (!meetingItem?._id) {
+		return
+	}
+	selectedMeeting = meetingItem
+	confirmContent.value = meetingItem.isDeleted === 1 ? '确定恢复？' : '确定删除？'
+	confirmDialog.value.open()
+}
+const deleteConfirm = async () => {
+	if (!selectedMeeting?._id) {
+		return
+	}
+	const newDeleteStatus = selectedMeeting.isDeleted === 1 ? 0 : 1
+	await uniCloud.callFunction({
+		name: 'meetings',
+		data: {
+			type: 'updateDeleteStatus',
+			id: selectedMeeting._id,
+			isDeleted: newDeleteStatus
+		}
+	})
+
+	selectedMeeting.isDeleted = newDeleteStatus
 }
 </script>
 
@@ -279,6 +338,26 @@ const onMeetingClick = (link) => {
 		height: 60px;
 		flex: 0 0 60px;
 		border-radius: 6px;
+	}
+}
+
+.admin-toolbar {
+	padding: 0 20px;
+	height: 36px;
+	line-height: 36px;
+	background-color: #a9c9ff;
+	border-radius: 4px;
+	cursor: pointer;
+	display: flex;
+	justify-content: center;
+	position: relative;
+	&--deleted {
+		background-color: #d3d4d8;
+	}
+	.admin-toolbar__deleted-msg {
+		position: absolute;
+		right: 10px;
+		color: #e43d33;
 	}
 }
 </style>

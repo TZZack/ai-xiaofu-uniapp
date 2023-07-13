@@ -1,0 +1,53 @@
+// 文档教程: https://uniapp.dcloud.net.cn/uniCloud/schema
+{
+	"bsonType": "object",
+	"description": "文章表",
+	"required": ["title", "summary", "link", "type", "push_time"],
+	"permission": {
+		"read": false,
+		"create": false,
+		"update": false,
+		"delete": false
+	},
+	"properties": {
+		"_id": {
+		  "description": "ID，系统自动生成"
+		},
+		"title": {
+		  "description": "文章title",
+		  "bsonType": "string"
+		},
+		"summary": {
+		  "description": "文章简介",
+		  "bsonType": "string"
+		},
+		"link": {
+		  "description": "文章链接",
+		  "bsonType": "string"
+		},
+		"type": {
+		  "description": "文章分类",
+		  "bsonType": "int"
+		},
+		"create_time": {
+		  "description": "文章创建时间",
+		  "bsonType": "timestamp"
+		},
+		"push_time": {
+		  "description": "文章推送时间",
+		  "bsonType": "timestamp"
+		},
+		"imgSrc": {
+		  "description": "封面图片链接",
+		  "bsonType": "string"
+		},
+		"isSquare": {
+		  "description": "封面图片是否为正方形：0-正方形，1-长方形",
+		  "enum": [0, 1]
+		},
+		"isDeleted": {
+		  "description": "是否被标记为已删除：0-未标记，1-已标记",
+		  "enum": [0, 1]
+		}
+	}
+}

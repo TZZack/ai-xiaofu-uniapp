@@ -2,27 +2,44 @@
 'use strict';
 
 const db = uniCloud.database()
+const dbCmd = db.command
 exports.main = async (event, context) => {
 	const {
 		category,
+		isAdmin = false,
 		pageNo = 1,
 		pageSize = 20,
 	} = event;
 
+	// admin不做isDeleted的过滤
+	const collectionInstance = db.collection('articles')
+	let collectionObj
 	if (category === -1) {
-		return await db.collection('articles')
-			.orderBy('push_time', 'desc')
+		if (!isAdmin) {
+			collectionObj = collectionInstance
+				.where({
+					isDeleted: dbCmd.neq(1)
+				})
+		} else {
+			collectionObj = collectionInstance
+		}
+	} else {
+		if (isAdmin) {
+			collectionObj = collectionInstance
+				.where({
+					type: category,
+				})
+		} else {
+			collectionObj = collectionInstance
+				.where({
+					type: category,
+					isDeleted: dbCmd.neq(1)
+				})
+		}
+	}
+
+	return await collectionObj.orderBy('push_time', 'desc')
 			.skip((pageNo - 1) * pageSize)
 			.limit(pageSize)
 			.get()
-	}
-
-	return await db.collection('articles')
-		.where({
-			type: category
-		})
-		.orderBy('push_time', 'desc')
-		.skip((pageNo - 1) * pageSize)
-		.limit(pageSize)
-		.get()
 };

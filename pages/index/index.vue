@@ -53,6 +53,16 @@
 						<view class="article-footer__time">{{article.timeFlag}}</view>
 						<view class="article-footer__icon"></view>
 					</view>
+					
+					<!-- 超级权限 -->
+					<view v-if="isLogin"
+						class="admin-toolbar"
+						:class="article.isDeleted ? 'admin-toolbar--deleted' : ''"
+						@click.stop="onAdminClick(article)">
+						<uni-icons :type="article.isDeleted ? 'refreshempty' : 'trash'" size="26"></uni-icons>
+						<view v-if="article.isDeleted" class="admin-toolbar__deleted-msg">已删除</view>
+					</view>
+					
 				</uni-card>
 				<view v-else :key="article.value" class="article-date">{{ article.value }}</view>
 			</template>
@@ -61,6 +71,14 @@
 				:status="loadMoreStatus"
 				:content-text="loadMoreTextObj" />
 		</scroll-view>
+		<uni-popup ref="confirmDialog" type="dialog">
+			<uni-popup-dialog
+				type="warn"
+				:content="confirmContent"
+				calcelText="取消"
+				confirmText="确定"
+				@confirm="onAdminConfirm" />
+		</uni-popup>
 	</view>
 </template>
 
@@ -70,6 +88,7 @@ import { encodeDate, timeTransform } from '../../utils'
 import UniSkeleton from '../../components/skeleton/index.vue'
 import TabBar from '../../components/tabBar.vue'
 import { useTabbarControl } from '../../hooks/tabbarControl.js'
+import { useLogin } from '/hooks/login'
 
 const ALL_TYPE = {
 	alias: '全部',
@@ -102,6 +121,7 @@ const loadMoreTextObj = {
 	contentnomore: '没有更多数据了',
 }
 
+const {isLogin} = useLogin()
 onMounted(() => {
 	useTabbarControl('article-scroll-view')
 	getCategoryList()
@@ -133,6 +153,7 @@ const getArticles = async (isLoadMore = false) => {
 	const ret = await uniCloud.callFunction({
 		name: 'articles',
 		data: {
+			isAdmin: isLogin.value,
 			type: 'getList',
 			category: activeCategory.value,
 			pageNo,
@@ -204,8 +225,7 @@ const jumpPage = (link) => {
 		return
 	}
 
-	window.location.href = link
-	// window.open(link)
+	window.open(link)
 }
 
 // 左右滑动切换类别
@@ -231,6 +251,34 @@ const onTouchEnd = (e) => {
 			reloadList()
 		}
 	}
+}
+
+const confirmDialog = ref('')
+const confirmContent = ref('')
+let selectedArticle = ''
+const onAdminClick = async (article) => {
+	if (!article?._id) {
+		return
+	}
+	selectedArticle = article
+	confirmContent.value = article.isDeleted === 1 ? '确定恢复？' : '确定删除？'
+	confirmDialog.value.open()
+}
+const onAdminConfirm = async () => {
+	if (!selectedArticle?._id) {
+		return
+	}
+	const newDeleteStatus = selectedArticle.isDeleted === 1 ? 0 : 1
+	await uniCloud.callFunction({
+		name: 'articles',
+		data: {
+			type: 'updateDeleteStatus',
+			id: selectedArticle._id,
+			isDeleted: newDeleteStatus
+		}
+	})
+
+	selectedArticle.isDeleted = newDeleteStatus
 }
 </script>
 
@@ -355,6 +403,26 @@ const onTouchEnd = (e) => {
 		position: absolute;
 		right: 8px;
 		top: -8px;
+	}
+}
+
+.admin-toolbar {
+	padding: 0 20px;
+	height: 36px;
+	line-height: 36px;
+	background-color: #a9c9ff;
+	border-radius: 4px;
+	cursor: pointer;
+	display: flex;
+	justify-content: center;
+	position: relative;
+	&--deleted {
+		background-color: #d3d4d8;
+	}
+	.admin-toolbar__deleted-msg {
+		position: absolute;
+		right: 10px;
+		color: #e43d33;
 	}
 }
 </style>
