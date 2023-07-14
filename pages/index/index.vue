@@ -3,16 +3,10 @@
 		  :class="{
 			  'pc-container': isPc
 		  }">
-		<TabBar v-model="activeCategory"
-				:dataSource="categoryList"
-				style="flex: 0 0 44px;"
-				@change="onCategoryChange"></TabBar>
 		<scroll-view
 			class="article-scroll-view"
 			scroll-y
 			@scrolltolower="onScrollToLower"
-			@touchstart="onTouchStart"
-			@touchend="onTouchEnd"
 			@touchmove.stop
 		>
 			<uni-skeleton v-show="!hasLoaded" :rows="6" animated :loading="!hasLoaded" />
@@ -86,22 +80,14 @@
 import {ref, onMounted, computed} from 'vue'
 import { encodeDate, timeTransform } from '../../utils'
 import UniSkeleton from '../../components/skeleton/index.vue'
-import TabBar from '../../components/tabBar.vue'
-import { useTabbarControl } from '../../hooks/tabbarControl.js'
 import { useLogin } from '/hooks/login'
 
-const ALL_TYPE = {
-	alias: '全部',
-	value: -1
-}
 const LOAD_MORE_STATUS = {
 	loading: 'loading',
 	noMore: 'noMore'
 }
 
 const articleList = ref([])
-const categoryList = ref([])
-const activeCategory = ref(ALL_TYPE.value)
 
 // 是否pc端
 const isPc = computed(() => {
@@ -123,22 +109,10 @@ const loadMoreTextObj = {
 
 const {isLogin} = useLogin()
 onMounted(() => {
-	useTabbarControl('article-scroll-view')
-	getCategoryList()
 	getArticles()
 })
 
-const getCategoryList = async () => {
-	const ret = await uniCloud.callFunction({
-		name: 'articles',
-		data: {
-			type: 'getTypes'
-		}
-	})
-	const list = ret.result.data || []
-	list.unshift(ALL_TYPE)
-	categoryList.value = list
-}
+
 const getArticles = async (isLoadMore = false) => {
 	if (loadMoreStatus.value === LOAD_MORE_STATUS.noMore) {
 		return
@@ -155,7 +129,6 @@ const getArticles = async (isLoadMore = false) => {
 		data: {
 			isAdmin: isLogin.value,
 			type: 'getList',
-			category: activeCategory.value,
 			pageNo,
 			pageSize,
 		}
@@ -197,20 +170,6 @@ const dataHandler = (data) => {
 	return ret
 }
 
-// 切换类型的操作
-const onCategoryChange = () => {
-	reloadList()
-}
-const reloadList = () => {
-	// 重置参数
-	hasLoaded.value = false
-	articleList.value = []
-	pageNo = 1
-	loadMoreStatus.value = LOAD_MORE_STATUS.loading
-	
-	getArticles()
-}
-
 // 上拉加载更多
 const onScrollToLower = () => {
 	if (loadMoreStatus.value === LOAD_MORE_STATUS.noMore) {
@@ -228,31 +187,7 @@ const jumpPage = (link) => {
 	window.open(link)
 }
 
-// 左右滑动切换类别
-let touchStartX = 0;
-let touchStartY = 0;
-const onTouchStart = (e) => {
-	touchStartX = e.touches[0].clientX;
-	touchStartY = e.touches[0].clientY;
-}
-const onTouchEnd = (e) => {
-	const deltaX = e.changedTouches[0].clientX - touchStartX
-	const deltaY = e.changedTouches[0].clientY - touchStartY
-	if (Math.abs(deltaX) > 50 && Math.abs(deltaX) > Math.abs(deltaY)) {
-		const curCategoryIndex = categoryList.value.findIndex(item => item.value === activeCategory.value)
-		if (curCategoryIndex < 0) {
-			return
-		}
-		if (deltaX > 0 && curCategoryIndex > 0) {
-			activeCategory.value = categoryList.value[curCategoryIndex - 1].value
-			reloadList()
-		} else if (deltaX < 0 && curCategoryIndex < categoryList.value.length - 1) {
-			activeCategory.value = categoryList.value[curCategoryIndex + 1].value
-			reloadList()
-		}
-	}
-}
-
+// admin管理相关
 const confirmDialog = ref('')
 const confirmContent = ref('')
 let selectedArticle = ''
@@ -294,7 +229,7 @@ const onAdminConfirm = async () => {
 }
 
 .article-scroll-view {
-	height: calc(100% - 44px);
+	height: 100%;
 	width: 100%;
 	padding: 0 16px;
 	box-sizing: border-box;

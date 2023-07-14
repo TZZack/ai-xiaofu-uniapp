@@ -44,6 +44,14 @@
 		"isDeleted": {
 		  "description": "是否被标记为已删除：0-未标记，1-已标记",
 		  "enum": [0, 1]
+		},
+		"official_account_name": {
+		  "description": "微信公众号名称",
+		  "bsonType": "string"
+		},
+		"official_account_logo": {
+		  "description": "微信公众号logo链接",
+		  "bsonType": "string"
 		}
 	}
 }
