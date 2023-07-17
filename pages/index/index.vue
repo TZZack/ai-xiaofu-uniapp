@@ -3,17 +3,19 @@
 		  :class="{
 			  'pc-container': isPc
 		  }">
-		<scroll-view
-			class="article-scroll-view"
-			scroll-y
-			@scrolltolower="onScrollToLower"
-			@touchmove.stop
-		>
-			<uni-skeleton v-show="!hasLoaded" :rows="6" animated :loading="!hasLoaded" />
-			<template v-show="hasLoaded" v-for="article in articleList">
+		<uni-skeleton v-show="!hasLoaded" :rows="6" animated :loading="!hasLoaded" />
+		<swiper
+			v-show="hasLoaded"
+			vertical
+			next-margin="14%"
+			class="article-swiper"
+			:current="currentIndex"
+			@change="onSwiperChange">
+			<swiper-item
+				v-for="article in articleList"
+				:key="article._id"
+				class="article-swiper-item">
 				<uni-card
-					v-if="article.type !== 'date'"
-					:key="article._id"
 					class="article-card"
 					:border="false"
 					:is-shadow="false"
@@ -22,30 +24,26 @@
 						<!-- 规避：这里给title再加一个click是因为uni-card的title使用插槽时click事件没有冒泡上来 -->
 						<view @click.stop="jumpPage(article.link)">
 							<image
-								v-if="!article.isSquare && article.imgSrc"
+								v-if="article.imgSrc"
 								:src="article.imgSrc"
 								mode="aspectFill"
 								class="article-header__img"></image>
-							<view class="article-header__title-wrap"
-								  :class="{
-									  'article-header__title-wrap--small': article.isSquare
-								  }">
-								<text
-									selectable
-									class="article-header__title"
-									:class="!article.isSquare && article.imgSrc ? '' : 'article-header__title-small'">{{article.title}}</text>
-								<image
-									v-if="article.isSquare && article.imgSrc"
-									:src="article.imgSrc"
-									mode="aspectFit"
-									class="article-header__img-small"></image>
-							</view>
 						</view>
 					</template>
-					<view class="article-summary"><text selectable>{{article.summary}}</text></view>
-					<view class="article-footer">
-						<view class="article-footer__time">{{article.timeFlag}}</view>
-						<view class="article-footer__icon"></view>
+					<view class="article-content-wrap">
+						<view class="article-summary"><text selectable>{{article.summary}}</text></view>
+						<view class="article-from">
+							<view class="article-from__label">来自：</view>
+							<text class="article-from__title-link">{{article.title}}</text>
+						</view>
+						<view class="article-footer">
+							<view class="article-footer__official-account">
+								<image :src="article.official_account_logo"
+									class="official-account-logo"></image>
+								<text class="official-account-name">{{article.official_account_name || ''}}</text>
+							</view>
+							<view class="article-footer__time">{{article.timeFlag}}</view>
+						</view>
 					</view>
 					
 					<!-- 超级权限 -->
@@ -56,15 +54,10 @@
 						<uni-icons :type="article.isDeleted ? 'refreshempty' : 'trash'" size="26"></uni-icons>
 						<view v-if="article.isDeleted" class="admin-toolbar__deleted-msg">已删除</view>
 					</view>
-					
+
 				</uni-card>
-				<view v-else :key="article.value" class="article-date">{{ article.value }}</view>
-			</template>
-			<uni-load-more
-				v-if="isLoadingMore || loadMoreStatus === LOAD_MORE_STATUS.noMore"
-				:status="loadMoreStatus"
-				:content-text="loadMoreTextObj" />
-		</scroll-view>
+			</swiper-item>
+		</swiper>
 		<uni-popup ref="confirmDialog" type="dialog">
 			<uni-popup-dialog
 				type="warn"
@@ -82,11 +75,6 @@ import { encodeDate, timeTransform } from '../../utils'
 import UniSkeleton from '../../components/skeleton/index.vue'
 import { useLogin } from '/hooks/login'
 
-const LOAD_MORE_STATUS = {
-	loading: 'loading',
-	noMore: 'noMore'
-}
-
 const articleList = ref([])
 
 // 是否pc端
@@ -96,16 +84,9 @@ const isPc = computed(() => {
 })
 
 const hasLoaded = ref(false) // 是否已经加载了数据
-const isLoadingMore = ref(false) // 是否正在加载更多
-const loadMoreStatus = ref(LOAD_MORE_STATUS.loading) // loading和noMore，more这个加载前状态就不用了，只用前面两个状态就够了
+const isNoMore = false // 是否没有更多
 let pageNo = 1
 const pageSize = 20
-
-// load-more组件各状态的文字
-const loadMoreTextObj = {
-	contentrefresh: ' ', // 使用空格，空字符串还是会显示默认的“正在加载”
-	contentnomore: '没有更多数据了',
-}
 
 const {isLogin} = useLogin()
 onMounted(() => {
@@ -113,15 +94,9 @@ onMounted(() => {
 })
 
 
-const getArticles = async (isLoadMore = false) => {
-	if (loadMoreStatus.value === LOAD_MORE_STATUS.noMore) {
+const getArticles = async () => {
+	if (isNoMore) {
 		return
-	}
-
-	// 不是加载更多时，则展示全局isLoadingMore
-	// 加载更多时，通过isLoadingMore控制加载更多图标的展示
-	if (isLoadMore) {
-		isLoadingMore.value = true
 	}
 
 	const ret = await uniCloud.callFunction({
@@ -140,43 +115,36 @@ const getArticles = async (isLoadMore = false) => {
 
 	// 判断是否没有更多数据了
 	if (data.length < pageSize || !data.length) {
-		loadMoreStatus.value = LOAD_MORE_STATUS.noMore
-	}
-
-	if (isLoadMore) {
-		isLoadingMore.value = false
+		isNoMore = true
 	}
 }
 
 const dataHandler = (data) => {
-	let ret = []
 	data.forEach(article => {
-		article.labels = article.labels ? article.labels.split(',') : []
-		article.push_time = encodeDate(new Date(article.push_time), 'Y-m-d H:i')
-		const articleDate = article.push_time.split(' ')[0] // 获取年月日
-		// 判断并插入新的日期节点
-		if (![...articleList.value, ...ret].some(item => item.type === 'date' && item.value === articleDate)) {
-			ret.push({
-				type: 'date',
-				value: articleDate
-			})
-		}
 		
 		// 不在template里面调用函数，先js处理在回填（防止出现nan）
 		article.timeFlag = timeTransform(article.push_time)
-
-		ret.push(article)
 	})
-	return ret
+	return data
 }
 
 // 上拉加载更多
-const onScrollToLower = () => {
-	if (loadMoreStatus.value === LOAD_MORE_STATUS.noMore) {
+const currentIndex = ref(0) // swiper的当前索引，单向
+const loadMore = () => {
+	if (isNoMore) {
 		return
 	}
 	pageNo++
-	getArticles(true)
+	getArticles()
+}
+const onSwiperChange = (e) => {
+	const {detail} = e
+	const {current} = detail
+	if (current >= articleList.value.length - 3) {
+		// 因为swiper组件的current是单向的，更新了数组后会按照传入的current重新渲染，所以这里也同步修改下current，防止跳到第一个
+		currentIndex.value = current
+		loadMore()
+	}
 }
 
 const jumpPage = (link) => {
@@ -228,7 +196,7 @@ const onAdminConfirm = async () => {
 	box-sizing: border-box;
 }
 
-.article-scroll-view {
+.article-swiper {
 	height: 100%;
 	width: 100%;
 	padding: 0 16px;
@@ -236,108 +204,125 @@ const onAdminConfirm = async () => {
 }
 
 .article-card {
-	padding: 0 !important;
+	height: calc(100% - 12px); // 12是margin-top
 	margin: 12px 0 0 0 !important;
+	padding: 0 !important;
 	cursor: pointer;
 	border-radius: 8px;
 	// 覆盖
 	font-family: 'PingFang SC Regular', Helvetica Neue, Helvetica, PingFang SC, Hiragino Sans GB, Microsoft YaHei, SimSun, sans-serif !important;
-}
-
-.article-header__img {
-	display: block;
-	width: 100%;
-	height: 144px;
-}
-.article-header__title-wrap {
-	padding: 0 16px;
-	margin-top: 20px;
-	display: flex;
-	justify-content: space-between;
-	margin-bottom: 26px;
-}
-.article-header__title-wrap--small {
-	margin-top: 12px;
-	margin-bottom: 10px;
-}
-.article-header__title {
-	font-size: 16px;
-	font-weight: 600;
-	line-height: 24px;
-	color: #000;
-	white-space: pre-line;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	display: -webkit-box;
-	-webkit-line-clamp: 3;
-	-webkit-box-orient: vertical;
-}
-/* 展示小图片的情况 */
-.article-header__title-small {
 	
-}
-.article-header__img-small {
-	height: 60px;
-	flex: 0 0 60px;
-	border-radius: 6px;
-}
-
-.article-date {
-	position: relative;
-	font-size: 14px;
-	line-height: 44px;
-	color: #666666;
-	/* 抵消article-card的margin */
-	margin-bottom: -12px;
-	padding-left: 30px;
-}
-.article-date:before {
-	content: '';
-	width: 14px;
-	height: 30px;
-	background: url(/static/img/time-middle.svg) no-repeat center;
-	position: absolute;
-	left: 0;
-	top: 6px;
-}
-.article-date:first-child:before {
-	background: url(/static/img/time-top.svg) no-repeat center;
-	top: 14px;
-}
-
-.article-summary {
-	padding: 0 6px;
-	font-size: 14px;
-	line-height: 22px;
-	color: #000;
-	position: relative;
-}
-.article-summary::before {
-	content: '';
-	width: 20px;
-	height: 30px;
-	background: url(/static/img/left-quote.svg) no-repeat center;
-	position: absolute;
-	left: 2px;
-	top: -32px;
-}
-
-.article-footer {
-	position: relative;
-	padding: 0 6px;
-	margin-top: 20px;
-	&__time {
-		font-size: 10px;
-		color: #666;
-		display: inline-block;
+	.article-header__img {
+		display: block;
+		width: 100%;
+		height: 360rpx;
 	}
-	&__icon {
-		width: 20px;
-		height: 30px;
+	:deep(.uni-card__content) {
+		padding: 0 !important;
+		height: calc(100% - 360rpx);
+	}
+	
+	.article-content-wrap {
+		padding: 144rpx 64rpx 20rpx;
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		height: 100%;
+		box-sizing: border-box;
+	}
+	.article-content-wrap::before {
+		content: '';
+		width: 40px;
+		height: 40px;
+		background: url(/static/img/left-quote.svg) no-repeat center;
+		position: absolute;
+		left: 30rpx;
+		top: 48rpx;
+	}
+	
+	// 文章简介/总结
+	.article-summary {
+		font-size: 15px;
+		line-height: 30px;
+		color: #000;
+		font-weight: 500;
+		flex: 1;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		text-align: justify;
+		// // 超过7行显示...
+		// white-space: pre-line;
+		// overflow: hidden;
+		// text-overflow: ellipsis;
+		// display: -webkit-box;
+		// -webkit-line-clamp: 5;
+		// -webkit-box-orient: vertical;
+	}
+	
+	// 文章出处
+	.article-from {
+		display: flex;
+		align-items: baseline;
+		font-size: 12px;
+		line-height: 20px;
+		margin-top: 24px;
+		flex: 0 0 204rpx;
+		&__label {
+			// display: inline-block;
+			flex: 0 0 46px;
+			color: #86909C;
+		}
+		&__title-link {
+			color: #165DFF;
+			flex: 1;
+			// 超过两行显示...
+			white-space: pre-line;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			display: -webkit-box;
+			-webkit-line-clamp: 2;
+			-webkit-box-orient: vertical;
+		}
+	}
+	
+	// 文章footer：公众号名称、时间
+	.article-footer {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		flex: 0 0 60rpx;
+		position: relative;
+		&__official-account {
+			display: flex;
+			align-items: center;
+			.official-account-logo {
+				width: 24px;
+				height: 24px;
+				margin-right: 8px;
+			}
+			.official-account-name {
+				font-size: 12px;
+				font-weight: 500;
+				line-height: 16px;
+				color: #1D2129;
+			}
+		}
+		&__time {
+			font-size: 12px;
+			font-weight: 500;
+			line-height: 16px;
+			color: #C9CDD4;
+		}
+	}
+	.article-footer::after {
+		content: '';
+		width: 40px;
+		height: 40px;
 		background: url(/static/img/right-quote.svg) no-repeat center;
 		position: absolute;
-		right: 8px;
-		top: -8px;
+		right: -40rpx;
+		bottom: 94rpx;
 	}
 }
 
