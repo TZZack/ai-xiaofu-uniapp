@@ -128,7 +128,7 @@
 
 <script setup>
 import {ref, onMounted, computed} from 'vue'
-import { encodeDate } from '../../utils'
+import { encodeDate } from '../../utils/format'
 import { useTabbarControl } from '../../hooks/tabbarControl.js'
 import UniSkeleton from '../../components/skeleton/index.vue'
 import { useLogin } from '/hooks/login'

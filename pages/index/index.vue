@@ -31,7 +31,10 @@
 						</view>
 					</template>
 					<view class="article-content-wrap">
-						<view class="article-summary"><text selectable>{{article.summary}}</text></view>
+						<view class="article-summary"
+							:style="{
+								'-webkit-line-clamp': webkitLineClamp
+							}"><text selectable>{{article.summary}}</text></view>
 						<view class="article-from">
 							<view class="article-from__label">来自：</view>
 							<text class="article-from__title-link">{{article.title}}</text>
@@ -70,8 +73,8 @@
 </template>
 
 <script setup>
-import {ref, onMounted, computed} from 'vue'
-import { encodeDate, timeTransform } from '../../utils'
+import {ref, onMounted, computed, nextTick} from 'vue'
+import { encodeDate, timeTransform } from '../../utils/format'
 import UniSkeleton from '../../components/skeleton/index.vue'
 import { useLogin } from '/hooks/login'
 
@@ -82,6 +85,13 @@ const isPc = computed(() => {
 	const deviceInfo = uni.getDeviceInfo()
 	return deviceInfo.deviceType === 'pc'
 })
+
+// 计算webkitLineClamp，不同分辨率内容区域的高度不一样（因为要尽量把内容区域最大化，用了flex:1）
+const webkitLineClamp = ref(0)
+const calcLineClamp = () => {
+	const textContainer = document.querySelector('.article-summary')
+	webkitLineClamp.value = Math.round(textContainer.clientHeight / 30)
+}
 
 const hasLoaded = ref(false) // 是否已经加载了数据
 const isNoMore = false // 是否没有更多
@@ -117,6 +127,10 @@ const getArticles = async () => {
 	if (data.length < pageSize || !data.length) {
 		isNoMore = true
 	}
+	
+	// 等待渲染完数据后（dom），才来计算多少行显示省略号
+	await nextTick()
+	calcLineClamp()
 }
 
 const dataHandler = (data) => {
@@ -247,17 +261,14 @@ const onAdminConfirm = async () => {
 		color: #000;
 		font-weight: 500;
 		flex: 1;
+		text-align: justify;
+		// // 超过n行显示...
+		white-space: pre-line;
 		overflow: hidden;
 		text-overflow: ellipsis;
-		white-space: nowrap;
-		text-align: justify;
-		// // 超过7行显示...
-		// white-space: pre-line;
-		// overflow: hidden;
-		// text-overflow: ellipsis;
-		// display: -webkit-box;
+		display: -webkit-box;
 		// -webkit-line-clamp: 5;
-		// -webkit-box-orient: vertical;
+		-webkit-box-orient: vertical;
 	}
 	
 	// 文章出处
