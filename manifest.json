@@ -43,6 +43,9 @@
             "ios" : {},
             /* ios打包配置 */
             "sdkConfigs" : {}
+        },
+        "uniStatistics" : {
+            "enable" : true
         }
     },
     /* SDK配置 */
@@ -56,5 +59,13 @@
         },
         "usingComponents" : true
     },
-    "vueVersion" : "3"
+    "vueVersion" : "3",
+    "uniStatistics" : {
+        "version" : "2"
+    },
+    "h5" : {
+        "uniStatistics" : {
+            "enable" : true
+        }
+    }
 }
