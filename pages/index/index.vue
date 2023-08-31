@@ -3,10 +3,6 @@
 		  :class="{
 			  'pc-container': isPc
 		  }">
-		<TabBar v-model="activeCategory"
-				:dataSource="categoryList"
-				style="flex: 0 0 44px;"
-				@change="onCategoryChange"></TabBar>
 		<scroll-view
 			class="article-scroll-view"
 			scroll-y
@@ -86,7 +82,6 @@
 import {ref, onMounted, computed} from 'vue'
 import { encodeDate, timeTransform } from '../../utils'
 import UniSkeleton from '../../components/skeleton/index.vue'
-import TabBar from '../../components/tabBar.vue'
 import { useTabbarControl } from '../../hooks/tabbarControl.js'
 import { useLogin } from '/hooks/login'
 
@@ -129,13 +124,7 @@ onMounted(() => {
 })
 
 const getCategoryList = async () => {
-	const ret = await uniCloud.callFunction({
-		name: 'articles',
-		data: {
-			type: 'getTypes'
-		}
-	})
-	const list = ret.result.data || []
+	const list = []
 	list.unshift(ALL_TYPE)
 	categoryList.value = list
 }
@@ -197,10 +186,6 @@ const dataHandler = (data) => {
 	return ret
 }
 
-// 切换类型的操作
-const onCategoryChange = () => {
-	reloadList()
-}
 const reloadList = () => {
 	// 重置参数
 	hasLoaded.value = false
